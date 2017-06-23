@@ -1,8 +1,5 @@
 package org.broadleafcommerce.broadleafxmlmigrator;
 
-import org.springframework.beans.factory.config.ListFactoryBean;
-import org.springframework.beans.factory.config.MapFactoryBean;
-import org.springframework.beans.factory.config.SetFactoryBean;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -26,9 +23,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 @SpringBootApplication
 public class BroadleafXmlMigratorApplication implements ApplicationRunner {
 
@@ -44,70 +38,49 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document document = db.parse(appctx.getInputStream());
-        ExecutionArguments executionArgs = new ExecutionArguments("/beans/bean[@id='messageSource']/property[@name='basenames']/list/value", 
-                                                        "/beans/bean[@id='messageSource']", "messageSourceBaseNames-client", 
-                                                        "messageSourceBaseNames", CollectionType.LIST, MergeType.LATE);
-        insertAndReplaceWithMerge(document, executionArgs);
+        for (ExecutionArguments executionArgs : new LateAndEarlyStageExecutionArguments().getLateAndEarlyMergeArguments()) {
+            insertAndReplaceWithMerge(document, executionArgs, qualifier);
+        }
         System.out.println(new XMLDocument(document).toString());
     }
     
-    protected void insertAndReplaceWithMerge(Document document, ExecutionArguments args) throws XPathExpressionException {
+    protected void insertAndReplaceWithMerge(Document document, ExecutionArguments args, String newBeanIdQualifier) throws XPathExpressionException {
+        String newBeanId = args.getTargetBeanId() + "-" + newBeanIdQualifier;
         XPath evaluator = XPathFactory.newInstance().newXPath();
-        NodeList vals = (NodeList) evaluator.evaluate(args.getCollectionXpath(), document, XPathConstants.NODESET);
+        Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
+        if (oldBeanDef == null) 
+            return;
         Element newCollectionBean = document.createElement("bean");
-        newCollectionBean.setAttribute("id", args.getNewBeanId());
+        newCollectionBean.setAttribute("id", newBeanId);
         newCollectionBean.setAttribute("class", args.getCollectionType().getCollectionClass());
-        Element newCollection = document.createElement(args.getCollectionType().collectionName);
-        for (int i = 0; i < vals.getLength(); i++) {
-            newCollection.appendChild(vals.item(i));
+        Element newCollection = document.createElement(args.getCollectionType().getCollectionName());
+        Boolean someValuesWereFound = false;
+        for (String xpath : args.getCollectionXpaths()) {
+            NodeList vals = (NodeList) evaluator.evaluate(xpath, document, XPathConstants.NODESET);
+            for (int i = 0; i < vals.getLength(); i++) {
+                someValuesWereFound = true;
+                newCollection.appendChild(vals.item(i));
+            }
         }
+        if (!someValuesWereFound)
+            return;
+        
         newCollectionBean.appendChild(newCollection);
         
         Element mergeBean = document.createElement("bean");
         mergeBean.setAttribute("class", args.getMergeType().getMergeClass());
         Element source = document.createElement("property");
         source.setAttribute("name", "sourceRef");
-        source.setAttribute("value", args.getNewBeanId());
+        source.setAttribute("value", newBeanId);
         mergeBean.appendChild(source);
         Element target = document.createElement("property");
         target.setAttribute("name", "targetRef");
         target.setAttribute("value", args.getTargetBeanId());
         mergeBean.appendChild(target);
         
-        Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
-        
         document.getFirstChild().insertBefore(newCollectionBean, oldBeanDef);
         document.getFirstChild().insertBefore(mergeBean, oldBeanDef);
         document.getFirstChild().removeChild(oldBeanDef);
-    }
-    
-    @Data
-    @AllArgsConstructor
-    public static class ExecutionArguments {
-        private String collectionXpath;
-        private String beanXpath;
-        private String newBeanId;
-        private String targetBeanId;
-        private CollectionType collectionType;
-        private MergeType mergeType;
-    }
-    
-    @Data
-    @AllArgsConstructor
-    public static class MergeType {
-        public static final MergeType LATE = new MergeType("org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor");
-        public static final MergeType EARLY = new MergeType("org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor");
-        private String mergeClass;
-    }
-    
-    @Data
-    @AllArgsConstructor
-    public static class CollectionType {
-        public static final CollectionType LIST = new CollectionType("list", ListFactoryBean.class.getName());
-        public static final CollectionType MAP = new CollectionType("map", MapFactoryBean.class.getName());
-        public static final CollectionType SET = new CollectionType("set", SetFactoryBean.class.getName());
-        private String collectionName;
-        private String collectionClass;
     }
     
     protected void loadHandlerProperties() throws IOException {

@@ -24,6 +24,18 @@
         </property>
     </bean>
     
+    <bean id="blCustomPersistenceHandlers" class="org.springframework.beans.factory.config.ListFactoryBean" scope="prototype">
+        <property name="sourceList">
+            <list>
+                <bean class="org.test.CustomPersistenceHandler" />
+                <ref bean="blPageTemplateCustomPersistenceHandler" />
+                <ref bean="blStructuredContentTypeCustomPersistenceHandler"/>
+                <ref bean="blTimeDTOCustomPersistenceHandler"/>
+                <ref bean="blRequestDTOCustomPersistenceHandler"/>
+            </list>
+        </property>
+    </bean>
+    
     <!-- Set up custom entity overrides. These are defined in core/src/main/resources -->
     <bean id="blMergedEntityContexts" class="org.springframework.beans.factory.config.ListFactoryBean">
         <property name="sourceList">

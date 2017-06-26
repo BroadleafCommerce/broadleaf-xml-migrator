@@ -38,13 +38,20 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
             insertAndReplaceWithMerge(document, executionArgs, qualifier);
         }
         handleWorkflowBeans(document, qualifier);
-        ExecutionArguments variableExpressionArgs = new ExecutionArguments
-                (new String[]{"/beans/bean[@id='blVariableExpressions']/property[@name='sourceList']/list/bean"},
-                 "/beans/bean[@id='blVariableExpressions']", "blVariableExpressions", null, null);
-        moveValuesOutOfParent(document, variableExpressionArgs);
+        handleVariableExpressions(document);
         System.out.println(new XMLDocument(document).toString());
     }
     
+    /**
+     * Handles the basic case of migrating a bean definition that utilized functionality in default.properties to the proper
+     * Early/LateStageMergeBeanPostProcessor since default.properties has been all but removed. This method creates
+     * a new collection bean, a new merge bean and then deletes the original bean definition
+     * 
+     * @param document
+     * @param args
+     * @param newBeanIdQualifier
+     * @throws XPathExpressionException
+     */
     protected void insertAndReplaceWithMerge(Document document, ExecutionArguments args, String newBeanIdQualifier) throws XPathExpressionException {
         String newBeanId = args.getTargetBeanId() + "-" + newBeanIdQualifier;
         XPath evaluator = XPathFactory.newInstance().newXPath();
@@ -64,12 +71,29 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         document.getFirstChild().removeChild(oldBeanDef);
     }
     
+    /**
+     * Wrapper around the other handleWorkflowBeans method that simply gets the workflow arguments
+     * @see handleWorkflwoBeans(Document, ExecutionArguments, String)
+     * @param document
+     * @param newBeanIdQualifier
+     * @throws XPathExpressionException
+     */
     protected void handleWorkflowBeans(Document document, String newBeanIdQualifier) throws XPathExpressionException {
         for (ExecutionArguments args : new WorkflowExecutionArguments().getWorkflowArguments()) {
             handlWorkflowBeans(document, args, newBeanIdQualifier);
         }
     }
     
+    /**
+     * Specifically handles migrating workflow beans. This is an exception because sometimes we don't want to delete the workflow bean
+     * if other properties are defined (this would mean the client was overriding the workflow) but we still want to merge their custom
+     * activities into the appropriate activities bean. If no other properties are defined then the workflow bean is simply removed
+     * 
+     * @param document
+     * @param args
+     * @param newBeanIdQualifier
+     * @throws XPathExpressionException
+     */
     protected void handlWorkflowBeans(Document document, ExecutionArguments args, String newBeanIdQualifier) throws XPathExpressionException {
         XPath evaluator = XPathFactory.newInstance().newXPath();
         Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
@@ -108,7 +132,19 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         oldBeanDef.appendChild(activitiesElement);
     }
     
-    protected void moveValuesOutOfParent(Document document, ExecutionArguments args) throws XPathExpressionException {
+    /**
+     * Handles previous declarations of variable expressions.
+     * Previously you could define the blVariableExpressions bean and we would merge it with blVariableExpression. Now it's
+     * not necessary since that list doesn't exist so this method simply pulls out any variable expressions that were
+     * being defined and then deletes the blVariableExpression definition
+     * 
+     * @param document
+     * @throws XPathExpressionException
+     */
+    protected void handleVariableExpressions(Document document) throws XPathExpressionException {
+        ExecutionArguments args = new ExecutionArguments
+                (new String[]{"/beans/bean[@id='blVariableExpressions']/property[@name='sourceList']/list/bean"},
+                 "/beans/bean[@id='blVariableExpressions']", "blVariableExpressions", null, null);
         XPath evaluator = XPathFactory.newInstance().newXPath();
         Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
         if (oldBeanDef == null) {
@@ -123,6 +159,15 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         document.getFirstChild().removeChild(oldBeanDef);
     }
     
+    /**
+     * Creates a collection bean based off of the given ExecutionArguments
+     * 
+     * @param document
+     * @param args
+     * @param newBeanId
+     * @return
+     * @throws XPathExpressionException
+     */
     protected Element createCollectionBean(Document document, ExecutionArguments args, String newBeanId) throws XPathExpressionException {
         XPath evaluator = XPathFactory.newInstance().newXPath();
         Element newCollectionBean = document.createElement("bean");
@@ -147,6 +192,14 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         return newCollectionBean;
     }
     
+    /**
+     * Creates a Late/EarlyStageMergeBeanPostProcessor bean based off of the given ExecutionArguments
+     * 
+     * @param document
+     * @param args
+     * @param newBeanId
+     * @return
+     */
     protected Element createMergeBean(Document document, ExecutionArguments args, String newBeanId) {
         Element mergeBean = document.createElement("bean");
         mergeBean.setAttribute("class", args.getMergeType().getMergeClass());

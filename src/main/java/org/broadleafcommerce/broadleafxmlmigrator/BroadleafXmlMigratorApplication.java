@@ -12,10 +12,6 @@ import org.w3c.dom.NodeList;
 
 import com.jcabi.xml.XMLDocument;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Properties;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -41,6 +37,10 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         for (ExecutionArguments executionArgs : new LateAndEarlyStageExecutionArguments().getLateAndEarlyMergeArguments()) {
             insertAndReplaceWithMerge(document, executionArgs, qualifier);
         }
+        ExecutionArguments variableExpressionArgs = new ExecutionArguments
+                (new String[]{"/beans/bean[@id='blVariableExpressions']/property[@name='sourceList']/list/bean"},
+                 "/beans/bean[@id='blVariableExpressions']", "blVariableExpressions", null, null);
+        moveValuesOutOfParent(document, variableExpressionArgs);
         System.out.println(new XMLDocument(document).toString());
     }
     
@@ -85,13 +85,16 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         document.getFirstChild().removeChild(oldBeanDef);
     }
     
-    protected void loadHandlerProperties() throws IOException {
-        Properties defaultProperties = new Properties();
-        defaultProperties.load(new ClassPathResource("default.properties").getInputStream());
-        Iterator propsIterator = defaultProperties.entrySet().iterator();
-        while (propsIterator.hasNext()) {
-            
+    protected void moveValuesOutOfParent(Document document, ExecutionArguments args) throws XPathExpressionException {
+        XPath evaluator = XPathFactory.newInstance().newXPath();
+        Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
+        for (String xpath : args.getCollectionXpaths()) {
+            NodeList vals = (NodeList) evaluator.evaluate(xpath, document, XPathConstants.NODESET);
+            for (int i = 0; i < vals.getLength(); i++) {
+                document.getFirstChild().insertBefore(vals.item(i), oldBeanDef);
+            }
         }
+        document.getFirstChild().removeChild(oldBeanDef);
     }
     
 }

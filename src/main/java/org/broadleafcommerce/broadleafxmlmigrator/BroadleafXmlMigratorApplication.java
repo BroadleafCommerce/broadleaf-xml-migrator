@@ -12,6 +12,9 @@ import org.w3c.dom.NodeList;
 
 import com.jcabi.xml.XMLDocument;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -21,14 +24,19 @@ import javax.xml.xpath.XPathFactory;
 
 @SpringBootApplication
 public class BroadleafXmlMigratorApplication implements ApplicationRunner {
-
-	public static void main(String[] args) {
-		SpringApplication.run(BroadleafXmlMigratorApplication.class, args);
-	}
+    
+    protected static StringBuilder LOG = new StringBuilder();
+    
+    protected static Map<String, String> affectedBeanMap = new LinkedHashMap<>();
+    
+    public static void main(String[] args) {
+        SpringApplication.run(BroadleafXmlMigratorApplication.class, args);
+    }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         // TODO: take in qualifier as command line argument
+        LOG.append("\n\n\n");
         String qualifier = "client";
         ClassPathResource appctx = new ClassPathResource("applicationContext-test.xml");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -39,7 +47,11 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         }
         handleWorkflowBeans(document, qualifier);
         handleVariableExpressions(document);
+        handleRemoveUnneededBeans(document);
+        LOG.append("\n\n\n");
         System.out.println(new XMLDocument(document).toString());
+        printBeanChanges();
+        System.out.println(LOG.toString());
     }
     
     /**
@@ -69,6 +81,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         document.getFirstChild().insertBefore(newCollectionBean, oldBeanDef);
         document.getFirstChild().insertBefore(mergeBean, oldBeanDef);
         document.getFirstChild().removeChild(oldBeanDef);
+        logBeanChange(args.getBeanXpath(), newBeanId);
     }
     
     /**
@@ -112,7 +125,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
             insertAndReplaceWithMerge(document, args, newBeanIdQualifier);
             return;
         }
-        // TODO log that we're about to do some weird stuff
+        LOG.append("We found a workflow with xpath " + args.getBeanXpath() + " and it had more properties than just the activities.\nWe're assuming that there were custom properties set so we will simply merge the activities into the correct bean named " + args.getTargetBeanId() + " and update the activities reference to that bean.\nIf there is no actual customizations then the bean at xpath " + args.getBeanXpath() + " can instead be removed\n\n");
         String newBeanId = args.getTargetBeanId() + "-" + newBeanIdQualifier;
         Element collectionBean = createCollectionBean(document, args, newBeanId);
         if (collectionBean == null) {
@@ -130,6 +143,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         activitiesElement.setAttribute("name", "activities");
         activitiesElement.setAttribute("ref", args.getTargetBeanId());
         oldBeanDef.appendChild(activitiesElement);
+        logBeanChange(args.getBeanXpath(), newBeanId);
     }
     
     /**
@@ -150,6 +164,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         if (oldBeanDef == null) {
             return;
         }
+        LOG.append("Variable Expressions now just have to be defined and not merged into blVariableExpression.\nThe beans that were created in blVariableExpressions were moved out and then the blVariableExpressions definition was removed\n\n");
         for (String xpath : args.getCollectionXpaths()) {
             NodeList vals = (NodeList) evaluator.evaluate(xpath, document, XPathConstants.NODESET);
             for (int i = 0; i < vals.getLength(); i++) {
@@ -157,6 +172,19 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
             }
         }
         document.getFirstChild().removeChild(oldBeanDef);
+        logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
+    }
+    
+    protected void handleRemoveUnneededBeans(Document document) throws XPathExpressionException {
+        XPath evaluator = XPathFactory.newInstance().newXPath();
+        for (LoggableExecutionArguments args : new RemovedBeanExecutionArguments().getLoggableExecutionArguments()) {
+            Node node  = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
+            if (node != null) {
+                document.getFirstChild().removeChild(node);
+                LOG.append(args.getLogMessage() + "\n\n");
+                logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
+            }
+        }
     }
     
     /**
@@ -212,5 +240,32 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         target.setAttribute("value", args.getTargetBeanId());
         mergeBean.appendChild(target);
         return mergeBean;
+    }
+    
+    protected void logBeanChange(String oldXpath, String newBeanId) {
+        affectedBeanMap.put(oldXpath, newBeanId);
+    }
+    
+    protected void printBeanChanges() {
+        LOG.append("Beans that were affected:\n");
+        int maxKeyLength = -1;
+        for (String key : affectedBeanMap.keySet()) {
+            if (key.length() > maxKeyLength) {
+                maxKeyLength = key.length();
+            }
+        }
+        LOG.append("Old Xpath");
+        for (int i = 0 ; i < (maxKeyLength - "Old Xpath".length()); i++) {
+            LOG.append(" ");
+        }
+        LOG.append(" :: New Bean Id\n");
+        for (String key : affectedBeanMap.keySet()) {
+            LOG.append(key);
+            for (int i = 0; i < (maxKeyLength - key.length()); i++) {
+                LOG.append(" ");
+            }
+            LOG.append(" :: " + affectedBeanMap.get(key) + "\n");
+        }
+        LOG.append("\n");
     }
 }

@@ -10,9 +10,10 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CollectionType {
-    public static final CollectionType LIST = new CollectionType("list", ListFactoryBean.class.getName());
-    public static final CollectionType MAP = new CollectionType("map", MapFactoryBean.class.getName());
-    public static final CollectionType SET = new CollectionType("set", SetFactoryBean.class.getName());
+    public static final CollectionType LIST = new CollectionType("list", ListFactoryBean.class.getName(), "sourceList");
+    public static final CollectionType MAP = new CollectionType("map", MapFactoryBean.class.getName(), "sourceMap");
+    public static final CollectionType SET = new CollectionType("set", SetFactoryBean.class.getName(), "sourceSet");
     private String collectionName;
     private String collectionClass;
+    private String sourcePropertyName;
 }

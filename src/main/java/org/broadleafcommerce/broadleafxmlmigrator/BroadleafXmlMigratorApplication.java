@@ -34,7 +34,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         // TODO: take in qualifier as command line argument
         String qualifier = "client";
-        ClassPathResource appctx = new ClassPathResource("applicationContext.xml");
+        ClassPathResource appctx = new ClassPathResource("applicationContext-test.xml");
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document document = db.parse(appctx.getInputStream());
@@ -53,6 +53,8 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         Element newCollectionBean = document.createElement("bean");
         newCollectionBean.setAttribute("id", newBeanId);
         newCollectionBean.setAttribute("class", args.getCollectionType().getCollectionClass());
+        Element sourcePropertyElement = document.createElement("property");
+        sourcePropertyElement.setAttribute("name", args.getCollectionType().getSourcePropertyName());
         Element newCollection = document.createElement(args.getCollectionType().getCollectionName());
         Boolean someValuesWereFound = false;
         for (String xpath : args.getCollectionXpaths()) {
@@ -65,8 +67,8 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
         if (!someValuesWereFound)
             return;
         
-        newCollectionBean.appendChild(newCollection);
-        
+        sourcePropertyElement.appendChild(newCollection);
+        newCollectionBean.appendChild(sourcePropertyElement);
         Element mergeBean = document.createElement("bean");
         mergeBean.setAttribute("class", args.getMergeType().getMergeClass());
         Element source = document.createElement("property");

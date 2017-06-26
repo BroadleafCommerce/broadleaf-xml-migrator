@@ -194,6 +194,9 @@
     </bean>
     
     <bean id="blRemoveItemWorkflow" class="org.broadleafcommerce.core.workflow.SequenceProcessor">
+        <property name="processContextFactory">
+            <bean class="org.broadleafcommerce.core.order.service.workflow.CartOperationProcessContextFactory"/>
+        </property>
         <property name="activities">
             <list>
                 <ref bean="blValidateRemoveRequestActivity" />
@@ -204,6 +207,7 @@
                 <ref bean="blRemoveWorkflowVerifyFulfillmentGroupItemsActivity" />
             </list>
         </property>
+        <property name="defaultErrorHandler" ref="blDefaultErrorHandler"/>
     </bean>
     
     <bean id="blAdditionalSectionAuthorizations" class="org.springframework.beans.factory.config.ListFactoryBean" scope="prototype">

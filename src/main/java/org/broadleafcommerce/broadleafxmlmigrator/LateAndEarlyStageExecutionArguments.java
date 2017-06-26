@@ -57,26 +57,6 @@ public class LateAndEarlyStageExecutionArguments {
             new ExecutionArguments(new String[]{"/beans/bean[@id='blPersistenceProviders']/property[@name='sourceList']/list/ref", "/beans/bean[@id='blPersistenceProviders']/property[@name='sourceList']/list/bean"},
                                    "/beans/bean[@id='blPersistenceProviders']", "blPersistenceProviders", CollectionType.LIST, MergeType.EARLY);
     
-    public static final ExecutionArguments PRICING_WORKFLOW =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blPricingWorkflow']/property[@name='activities']/list/ref", "/beans/bean[@id='blPricingWorkflow']/property[@name='activities']/list/bean"},
-                                   "/beans/bean[@id='blPricingWorkflow']", "blPricingWorkflowActivities", CollectionType.LIST, MergeType.LATE);
-    
-    public static final ExecutionArguments ADD_ITEM_WORKFLOW =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blAddItemWorkflow']/property[@name='activities']/list/ref", "/beans/bean[@id='blAddItemWorkflow']/property[@name='activities']/list/bean"},
-                                   "/beans/bean[@id='blAddItemWorkflow']", "blAddItemWorkflowActivties", CollectionType.LIST, MergeType.LATE);
-    
-    public static final ExecutionArguments UPDATE_ITEM_WORKFLOW =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blUpdateItemWorkflow']/property[@name='activities']/list/ref", "/beans/bean[@id='blUpdateItemWorkflow']/property[@name='activities']/list/bean"},
-                                   "/beans/bean[@id='blUpdateItemWorkflow']", "blUpdateItemWorkflowActivities", CollectionType.LIST, MergeType.LATE);
-    
-    public static final ExecutionArguments REMOVE_ITEM_WORKFLOW =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blRemoveItemWorkflow']/property[@name='activities']/list/ref", "/beans/bean[@id='blRemoveItemWorkflow']/property[@name='activities']/list/bean"},
-                                   "/beans/bean[@id='blRemoveItemWorkflow']", "blRemoveItemWorkflowActivities", CollectionType.LIST, MergeType.LATE);
-    
-    public static final ExecutionArguments CHECKOUT_WORKFLOW =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blCheckoutWorkflow']/property[@name='activities']/list/ref", "/beans/bean[@id='blCheckoutWorkflow']/property[@name='activities']/list/bean"},
-                                   "/beans/bean[@id='blCheckoutWorkflow']", "blCheckoutWorkflowActivities", CollectionType.LIST, MergeType.LATE);
-    
     public static final ExecutionArguments ADDITIONAL_SECTION_AUTHORIZATIONS =
             new ExecutionArguments(new String[]{"/beans/bean[@id='blAdditionalSectionAuthorizations']/property[@name='sourceList']/list/ref", "/beans/bean[@id='blAdditionalSectionAuthorizations']/property[@name='sourceList']/list/bean"},
                                    "/beans/bean[@id='blAdditionalSectionAuthorizations']", "blAdditionalSectionAuthorizations", CollectionType.LIST, MergeType.LATE);
@@ -92,10 +72,6 @@ public class LateAndEarlyStageExecutionArguments {
     public static final ExecutionArguments RULE_BUILDER_FIELD_SERVICES =
             new ExecutionArguments(new String[]{"/beans/bean[@id='blRuleBuilderFieldServices']/property[@name='sourceList']/list/ref", "/beans/bean[@id='blRuleBuilderFieldServices']/property[@name='sourceList']/list/bean"},
                                    "/beans/bean[@id='blRuleBuilderFieldServices']", "blRuleBuilderFieldServices", CollectionType.LIST, MergeType.LATE);
-    
-    public static final ExecutionArguments UPDATE_PRODUCT_OPTIONS_WORKFLOW =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blUpdateProductOptionsForItemWorkflow']/property[@name='activities']/list/ref", "/beans/bean[@id='blUpdateProductOptionsForItemWorkflow']/property[@name='activities']/list/bean"},
-                                   "/beans/bean[@id='blUpdateProductOptionsForItemWorkflow']", "blUpdateProductOptionsForItemWorkflowActivities", CollectionType.LIST, MergeType.LATE);
     
     public static final ExecutionArguments PERSISTENCE_UNIT_POST_PROCESSORS =
             new ExecutionArguments(new String[]{"/beans/bean[@id='blPersistenceUnitPostProcessors']/property[@name='sourceList']/list/ref", "/beans/bean[@id='blPersistenceUnitPostProcessors']/property[@name='sourceList']/list/bean"},
@@ -117,16 +93,10 @@ public class LateAndEarlyStageExecutionArguments {
         lateAndEarlyMergeArguments.add(MERGED_CLASS_TRANSFORMERS);
         lateAndEarlyMergeArguments.add(FIELD_METADATA_PROVIDERS);
         lateAndEarlyMergeArguments.add(PERSISTENCE_PROVIDERS);
-        lateAndEarlyMergeArguments.add(PRICING_WORKFLOW);
-        lateAndEarlyMergeArguments.add(ADD_ITEM_WORKFLOW);
-        lateAndEarlyMergeArguments.add(UPDATE_ITEM_WORKFLOW);
-        lateAndEarlyMergeArguments.add(REMOVE_ITEM_WORKFLOW);
-        lateAndEarlyMergeArguments.add(CHECKOUT_WORKFLOW);
         lateAndEarlyMergeArguments.add(ADDITIONAL_SECTION_AUTHORIZATIONS);
         lateAndEarlyMergeArguments.add(TAX_PROVIDERS);
         lateAndEarlyMergeArguments.add(ADDRESS_VERFICATION_PROVIDERS);
         lateAndEarlyMergeArguments.add(RULE_BUILDER_FIELD_SERVICES);
-        lateAndEarlyMergeArguments.add(UPDATE_PRODUCT_OPTIONS_WORKFLOW);
         lateAndEarlyMergeArguments.add(PERSISTENCE_UNIT_POST_PROCESSORS);
     }
     

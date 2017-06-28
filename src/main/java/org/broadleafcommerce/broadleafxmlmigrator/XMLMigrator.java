@@ -73,11 +73,13 @@ public class XMLMigrator {
         changed = handleWorkflowBeans(document) || changed;
         changed = handleVariableExpressions(document) || changed;
         changed = handleRemoveUnneededBeans(document) || changed;
-        if (isDryRun) {
-            LOG.info(DocumentHelper.formatDocumentToString(document));
-        } else if (changed){
-            try (FileWriter writer = new FileWriter(file, false)) {
-                writer.write(DocumentHelper.formatDocumentToString(document));
+        if (changed) {
+            if (isDryRun) {
+                LOG.info(DocumentHelper.formatDocumentToString(document));
+            } else {
+                try (FileWriter writer = new FileWriter(file, false)) {
+                    writer.write(DocumentHelper.formatDocumentToString(document));
+                }
             }
             LoggingHelper.printBeanChanges(file.getPath(), ongoingLog, affectedBeanMap);
             LOG.info("\n" + ongoingLog.toString());

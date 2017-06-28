@@ -1,4 +1,4 @@
-package org.broadleafcommerce.broadleafxmlmigrator;
+package org.broadleafcommerce.broadleafxmlmigrator.type;
 
 import org.springframework.beans.factory.config.ListFactoryBean;
 import org.springframework.beans.factory.config.MapFactoryBean;

@@ -1,4 +1,7 @@
-package org.broadleafcommerce.broadleafxmlmigrator;
+package org.broadleafcommerce.broadleafxmlmigrator.arguments;
+
+import org.broadleafcommerce.broadleafxmlmigrator.type.CollectionType;
+import org.broadleafcommerce.broadleafxmlmigrator.type.MergeType;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

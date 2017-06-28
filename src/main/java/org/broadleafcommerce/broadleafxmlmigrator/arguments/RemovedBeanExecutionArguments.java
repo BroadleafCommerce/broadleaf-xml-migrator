@@ -3,6 +3,14 @@ package org.broadleafcommerce.broadleafxmlmigrator.arguments;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A definition of all of the ExecutionArguments (i.e. rows from default.properties) that represent beans that can/need to be
+ * deleted from the application context. These are LoggableExecutionArguments because the reason from removing a bean is
+ * always specific and therefore it should be logged
+ * 
+ * @author Jay Aisenbrey (cja769)
+ *
+ */
 public class RemovedBeanExecutionArguments {
 
     public static final LoggableExecutionArguments CONFIGURATION = new LoggableExecutionArguments

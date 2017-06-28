@@ -6,6 +6,16 @@ import org.broadleafcommerce.broadleafxmlmigrator.type.MergeType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *  A definition of all of the ExecutionArguments (i.e. rows from default.properties) that represent workflow beans. These beans
+ *  are separate from the LateAndEarlyStageExecutionArguments because if other properties were defined then we assume that the
+ *  client had some overrides. Since XML merging no longer exists in BLC these properties won't merge like they did previous and 
+ *  therefore we should keep the definition and update accordingly. If the only change made by the client was that they added
+ *  activities then these should be treated the same as LateAndEarlyStageExecutionArguments 
+ * 
+ * @author Jay Aisenbrey (cja769)
+ *
+ */
 public class WorkflowExecutionArguments {
 
     public static final ExecutionArguments PRICING_WORKFLOW =

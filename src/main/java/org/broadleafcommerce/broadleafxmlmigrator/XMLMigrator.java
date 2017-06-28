@@ -23,6 +23,15 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+/**
+ * Main migration object that should be instantiated once and used many times for all application contexts for a project.
+ * This class handles migrating xml files that utilized BLC's XML merge processes for merging collections with the same
+ * id together as long as the id lived in default.properties. Additionally this migrator will remove any beans that are
+ * no longer needed.
+ * 
+ * @author Jay Aisenbrey (cja769)
+ *
+ */
 public class XMLMigrator {
     
     protected StringBuilder LOG = new StringBuilder();

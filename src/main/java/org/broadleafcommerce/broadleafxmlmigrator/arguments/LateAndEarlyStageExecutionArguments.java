@@ -6,6 +6,15 @@ import org.broadleafcommerce.broadleafxmlmigrator.type.MergeType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A definition of all of the ExecutionArguments (i.e. rows from default.properties) that can be generically changed
+ * directly from their current state to a collection bean merged with the target bean using a *StageMergeBeanPostProcessor bean.
+ * 
+ * This class was made because it was the easiest way to get the definitions into a list that can be loopable.
+ * 
+ * @author Jay Aisenbrey (cja769)
+ *
+ */
 public class LateAndEarlyStageExecutionArguments {
 
     public static final ExecutionArguments MERGED_PERSISTENCE_XML_LOCATIONS =

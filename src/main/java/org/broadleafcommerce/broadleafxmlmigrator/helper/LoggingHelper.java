@@ -2,8 +2,22 @@ package org.broadleafcommerce.broadleafxmlmigrator.helper;
 
 import java.util.Map;
 
+/**
+ * Helper class for various logging things
+ * 
+ * @author Jay Aisenbrey (cja769)
+ *
+ */
 public class LoggingHelper {
 
+    /**
+     * Given a map that represents the mapping of old xml xpaths to their new equivalent after migration, this method
+     * will build a rudimentary table using the given StringBuilder
+     * 
+     * @param fileName
+     * @param buffer
+     * @param beanMap
+     */
     public static void printBeanChanges(String fileName, StringBuilder buffer, Map<String, String> beanMap) {
         if (beanMap.keySet().size() == 0) {
             return;

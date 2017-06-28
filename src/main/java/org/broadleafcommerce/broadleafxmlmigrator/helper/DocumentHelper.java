@@ -26,8 +26,23 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+/**
+ * General HTML/XML document helper class used by the XMLMigrator
+ * 
+ * @author Jay Aisenbrey (cja769)
+ *
+ */
 public class DocumentHelper {
 
+    /**
+     * Helper method for creating an HTML or XML document
+     * 
+     * @param file
+     * @return
+     * @throws ParserConfigurationException
+     * @throws SAXException
+     * @throws IOException
+     */
     public static Document buildDocument(File file) throws ParserConfigurationException, SAXException, IOException {
         FileInputStream appctx = new FileInputStream(file);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -89,6 +104,15 @@ public class DocumentHelper {
         return mergeBean;
     }
     
+    /**
+     * Helper method for formatting the resulting XML document so that it looks better. Without this there won't be any
+     * spacing or formatting for any of the XML elements that were added to the document
+     * 
+     * @param document
+     * @return
+     * @throws TransformerFactoryConfigurationError
+     * @throws TransformerException
+     */
     public static String formatDocumentToString(Document document) throws TransformerFactoryConfigurationError, TransformerException {
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");

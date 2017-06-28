@@ -42,8 +42,5 @@ public class LoggingHelper {
             buffer.append(" :: " + beanMap.get(key) + "\n");
         }
         buffer.append("\n");
-        for (int i = 0; i < 100; i++) {
-            buffer.append("-");
-        }
     }
 }

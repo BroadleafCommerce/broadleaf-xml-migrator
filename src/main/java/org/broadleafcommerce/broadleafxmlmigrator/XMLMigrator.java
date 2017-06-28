@@ -1,5 +1,7 @@
 package org.broadleafcommerce.broadleafxmlmigrator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.broadleafcommerce.broadleafxmlmigrator.arguments.ExecutionArguments;
 import org.broadleafcommerce.broadleafxmlmigrator.arguments.LateAndEarlyStageExecutionArguments;
 import org.broadleafcommerce.broadleafxmlmigrator.arguments.LoggableExecutionArguments;
@@ -34,7 +36,9 @@ import javax.xml.xpath.XPathFactory;
  */
 public class XMLMigrator {
     
-    protected StringBuilder LOG = new StringBuilder();
+    protected StringBuilder ongoingLog = new StringBuilder();
+    
+    protected static Log LOG = LogFactory.getLog(XMLMigrator.class);
     
     protected Map<String, String> affectedBeanMap = new LinkedHashMap<>();
     
@@ -70,15 +74,15 @@ public class XMLMigrator {
         changed = handleVariableExpressions(document) || changed;
         changed = handleRemoveUnneededBeans(document) || changed;
         if (isDryRun) {
-            System.out.println(DocumentHelper.formatDocumentToString(document));
+            LOG.info(DocumentHelper.formatDocumentToString(document));
         } else if (changed){
             try (FileWriter writer = new FileWriter(file, false)) {
                 writer.write(DocumentHelper.formatDocumentToString(document));
             }
-            LoggingHelper.printBeanChanges(file.getPath(), LOG, affectedBeanMap);
-            System.out.println(LOG.toString());
+            LoggingHelper.printBeanChanges(file.getPath(), ongoingLog, affectedBeanMap);
+            LOG.info("\n" + ongoingLog.toString());
         }
-        LOG = new StringBuilder();
+        ongoingLog = new StringBuilder();
         affectedBeanMap = new LinkedHashMap<>();
     }
     
@@ -152,7 +156,7 @@ public class XMLMigrator {
         // If we actually find activities and create the merge bean then we'll replace the activities property with a reference
         // to the target bean so that their override will have the activities since it's a normal Spring wholesale override
         if (addCollectionAndMergeBeans(oldBeanDef, args, document)) {
-            LOG.append("We found a workflow with xpath " + args.getBeanXpath() + " and it had more properties than just the activities.\nWe're assuming that there were custom properties set so we will simply merge the activities into the correct bean named " + args.getTargetBeanId() + " and update the activities reference to that bean.\nIf there is no actual customizations then the bean at xpath " + args.getBeanXpath() + " can instead be removed\n\n");
+            ongoingLog.append("We found a workflow with xpath " + args.getBeanXpath() + " and it had more properties than just the activities.\nWe're assuming that there were custom properties set so we will simply merge the activities into the correct bean named " + args.getTargetBeanId() + " and update the activities reference to that bean.\nIf there is no actual customizations then the bean at xpath " + args.getBeanXpath() + " can instead be removed\n\n");
             String activitiesXpath = new WorkflowExecutionArguments().getActivitiesXpath(args);
             Node activitiesNode = (Node) evaluator.evaluate(activitiesXpath, document, XPathConstants.NODE);
             if (activitiesNode != null) {
@@ -209,7 +213,7 @@ public class XMLMigrator {
         if (oldBeanDef == null) {
             return false;
         }
-        LOG.append("Variable Expressions now just have to be defined and not merged into blVariableExpression.\nThe beans that were created in blVariableExpressions were moved out and then the blVariableExpressions definition was removed\n\n");
+        ongoingLog.append("Variable Expressions now just have to be defined and not merged into blVariableExpression.\nThe beans that were created in blVariableExpressions were moved out and then the blVariableExpressions definition was removed\n\n");
         for (String xpath : args.getCollectionXpaths()) {
             NodeList vals = (NodeList) evaluator.evaluate(xpath, document, XPathConstants.NODESET);
             for (int i = 0; i < vals.getLength(); i++) {
@@ -234,7 +238,7 @@ public class XMLMigrator {
             Node node  = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
             if (node != null) {
                 document.getFirstChild().removeChild(node);
-                LOG.append(args.getLogMessage() + "\n\n");
+                ongoingLog.append(args.getLogMessage() + "\n\n");
                 logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
                 changed = true;
             }

@@ -1,5 +1,7 @@
 package org.broadleafcommerce.broadleafxmlmigrator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -18,6 +20,8 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
     
     public static final String FILE_PATH_KEY = "filepath";
     
+    protected static Log LOG = LogFactory.getLog(BroadleafXmlMigratorApplication.class);
+    
     public static void main(String[] args) {
         SpringApplication.run(BroadleafXmlMigratorApplication.class, args);
     }
@@ -34,7 +38,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
                 recursivelyDoMigrations(file, migrator);
             }
         } else {
-            //throw new IllegalArgumentException("No folder or file path for an application context was provided");
+            LOG.info("No file path was specified. Please try again with a --filepath argument");
         }
     }
     
@@ -53,6 +57,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
     
     protected String resolveQualifierArg(List<String> qualifierArgs) {
         if (CollectionUtils.isEmpty(qualifierArgs)) {
+            LOG.info("No qualifier argument specified by a --qualifier argument. Using the word 'client' for a new bean id qualifier.");
             return "client";
         }
         return qualifierArgs.get(0);
@@ -60,6 +65,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
     
     protected boolean resolveDryRunArg(List<String> dryRunArgs) {
         if (CollectionUtils.isEmpty(dryRunArgs)) {
+            LOG.info("No dry run argument specified by a --dryrun argument. Using the --dryrun=true argument will print the resulting xml file to the console instead of modifiying the given xml file in place.");
             return false;
         }
         String dryRunString = dryRunArgs.get(0);

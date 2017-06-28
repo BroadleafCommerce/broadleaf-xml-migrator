@@ -89,6 +89,10 @@ public class LateAndEarlyStageExecutionArguments {
             new ExecutionArguments(new String[]{"/beans/bean[@id='blPersistenceUnitPostProcessors']/property[@name='sourceList']/list/ref", "/beans/bean[@id='blPersistenceUnitPostProcessors']/property[@name='sourceList']/list/bean"},
                                    "/beans/bean[@id='blPersistenceUnitPostProcessors']", "blPersistenceUnitPostProcessors", CollectionType.LIST, MergeType.EARLY);
     
+    public static final ExecutionArguments CONVERSION_SERVICE = 
+            new ExecutionArguments(new String[]{"/beans/bean[@id='conversionService']/property/list/bean", "/beans/bean[@id='conversionService']/property/list/ref"},
+                                   "/beans/bean[@id='conversionService']", "blConverters", CollectionType.SET, MergeType.LATE);
+    
     protected List<ExecutionArguments> lateAndEarlyMergeArguments = new ArrayList<>();
     
     public LateAndEarlyStageExecutionArguments() {
@@ -110,6 +114,7 @@ public class LateAndEarlyStageExecutionArguments {
         lateAndEarlyMergeArguments.add(ADDRESS_VERFICATION_PROVIDERS);
         lateAndEarlyMergeArguments.add(RULE_BUILDER_FIELD_SERVICES);
         lateAndEarlyMergeArguments.add(PERSISTENCE_UNIT_POST_PROCESSORS);
+        lateAndEarlyMergeArguments.add(CONVERSION_SERVICE);
     }
     
     public List<ExecutionArguments> getLateAndEarlyMergeArguments() {

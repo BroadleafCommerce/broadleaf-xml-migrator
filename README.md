@@ -70,3 +70,8 @@ mvn spring-boot:run -Drun.arguments="--filepath={filepath},--qualifier={qualifie
 
 ## Running without packaging into a jar
 `mvn spring-boot:run -Drun.arguments="--filepath=/Users/user/blc/DemoSite,--qualifier=ds,--dryrun=true"`
+
+## Example Results
+The result of running
+`mvn spring-boot:run -Drun.arguments="--filepath=src/main/resources/applicationContext-before.xml"` can be found [here](https://github.com/BroadleafCommerce/broadleaf-xml-migrator/blob/master/src/main/resources/applicationContext-after.xml).
+**Note** The file was originally changed in place but an original copy was retained for comparison and was named applicationContext-before

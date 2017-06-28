@@ -25,6 +25,7 @@ public class BroadleafXmlMigratorApplicationTests {
         XMLMigrator migrator = new XMLMigrator(false, "client");
         File testFile = getMutableFile("applicationContext.xml");
         app.recursivelyDoMigrations(testFile, migrator);
+        FileUtils.deleteQuietly(testFile);
     }
     
     @Test
@@ -33,7 +34,10 @@ public class BroadleafXmlMigratorApplicationTests {
         XMLMigrator migrator = new XMLMigrator(false, "client");
         app.recursivelyDoMigrations(beforeFile, migrator);
         File beenMigratedFile = getClasspathFile("applicationContext-after.xml");
-        Assert.assertTrue(FileUtils.contentEquals(beforeFile, beenMigratedFile));
+        boolean equals = FileUtils.contentEquals(beforeFile, beenMigratedFile);
+        FileUtils.deleteQuietly(beforeFile);
+        Assert.assertTrue(equals);
+        
     }
     
     @Test
@@ -41,7 +45,9 @@ public class BroadleafXmlMigratorApplicationTests {
         File beforeFile = getMutableFile("somethingSomethingNotAnXMLFile");
         XMLMigrator migrator = new XMLMigrator(false, "client");
         app.recursivelyDoMigrations(beforeFile, migrator);
-        Assert.assertTrue(FileUtils.contentEquals(beforeFile, getClasspathFile("applicationContext-before.xml")));
+        boolean equals = FileUtils.contentEquals(beforeFile, getClasspathFile("applicationContext-before.xml"));
+        FileUtils.deleteQuietly(beforeFile);
+        Assert.assertTrue(equals);
     }
     
     @Test
@@ -51,12 +57,15 @@ public class BroadleafXmlMigratorApplicationTests {
         File[] files = getComplicatedDirectoryStructure(parentDirectory);
         XMLMigrator migrator = new XMLMigrator(false, "client");
         app.recursivelyDoMigrations(parentDirectory, migrator);
-        for (int i = 0; i < files.length; i++) {
+        boolean successful = true;
+        for (int i = 0; i < files.length && successful; i++) {
             // Because of the collision protection every file after the first that is processed won't match
             // applicationContext-before.xml but we're just testing that they got read so as long as they changed
             // we'll count that as passing
-            Assert.assertFalse(FileUtils.contentEquals(files[i], getClasspathFile("applicationContext-before.xml")));
+            successful = !FileUtils.contentEquals(files[i], getClasspathFile("applicationContext-before.xml"));
         }
+        FileUtils.deleteDirectory(parentDirectory);
+        Assert.assertTrue(successful);
     }
     
     protected File getMutableFile(String newFileName) throws Exception {

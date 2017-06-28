@@ -38,7 +38,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
                 recursivelyDoMigrations(file, migrator);
             }
         } else {
-            LOG.info("No file path was specified. Please try again with a --filepath argument");
+            LOG.info("No file path was specified. Please try again with a --" + FILE_PATH_KEY + " argument");
         }
     }
     
@@ -57,7 +57,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
     
     protected String resolveQualifierArg(List<String> qualifierArgs) {
         if (CollectionUtils.isEmpty(qualifierArgs)) {
-            LOG.info("No qualifier argument specified by a --qualifier argument. Using the word 'client' for a new bean id qualifier.");
+            LOG.info("No qualifier argument specified by a --" + QUALIFIER_KEY + " argument. Using the word 'client' for a new bean id qualifier.");
             return "client";
         }
         return qualifierArgs.get(0);
@@ -65,7 +65,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
     
     protected boolean resolveDryRunArg(List<String> dryRunArgs) {
         if (CollectionUtils.isEmpty(dryRunArgs)) {
-            LOG.info("No dry run argument specified by a --dryrun argument. Using the --dryrun=true argument will print the resulting xml file to the console instead of modifiying the given xml file in place.");
+            LOG.info("No dry run argument specified by a --" + DRY_RUN_KEY + " argument. Using the --dryrun=true argument will print the resulting xml file to the console instead of modifiying the given xml file in place.");
             return false;
         }
         String dryRunString = dryRunArgs.get(0);

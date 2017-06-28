@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:task="http://www.springframework.org/schema/task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans         http://www.springframework.org/schema/beans/spring-beans-4.1.xsd         http://www.springframework.org/schema/context         http://www.springframework.org/schema/context/spring-context-4.1.xsd         http://www.springframework.org/schema/task         http://www.springframework.org/schema/task/spring-task-4.1.xsd">
+
+    
+
+    <!-- Set up Broadleaf messaging -->
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="messageSourceBaseNames-client">
+        <property name="sourceList">
+            <list>
+                <value>classpath:messages</value>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="messageSourceBaseNames-client"/>
+        <property name="targetRef" value="messageSourceBaseNames"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blCustomPersistenceHandlers-client">
+        <property name="sourceList">
+            <list>
+                <bean class="org.test.CustomPersistenceHandler"/>
+                <ref bean="blPageTemplateCustomPersistenceHandler"/>
+                <ref bean="blStructuredContentTypeCustomPersistenceHandler"/>
+                <ref bean="blTimeDTOCustomPersistenceHandler"/>
+                <ref bean="blRequestDTOCustomPersistenceHandler"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blCustomPersistenceHandlers-client"/>
+        <property name="targetRef" value="blCustomPersistenceHandlers"/>
+    </bean>
+    
+    <!-- Set up custom entity overrides. These are defined in core/src/main/resources -->
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blMergedEntityContexts-client">
+        <property name="sourceList">
+            <list>
+                <value>classpath:applicationContext-entity.xml</value>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blMergedEntityContexts-client"/>
+        <property name="targetRef" value="blMergedEntityContexts"/>
+    </bean>
+    
+    <!-- Delete this bean to enable caching - leaving it on for development is recommended -->
+    <!-- as it will allow changes made in the admin or directly on the database to be reflected -->
+    <!-- immediately. However, caching is obviously beneficial in production. -->
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blMergedCacheConfigLocations-client">
+        <property name="sourceList">
+            <list>
+                <value>classpath:bl-override-ehcache.xml</value>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blMergedCacheConfigLocations-client"/>
+        <property name="targetRef" value="blMergedCacheConfigLocations"/>
+    </bean>
+    
+    <!--  Broaldeaf Commerce comes with an Image Server that allows you to manipulate images.   For example, the 
+          demo includes a high resolution image for each product that is reduced in size for browsing operations -->
+    <bean class="org.springframework.beans.factory.config.MapFactoryBean" id="blStaticMapNamedOperations-client">
+        <property name="sourceMap">
+            <map>
+                <entry key="browse">
+                    <map>
+                        <entry key="resize-width-amount" value="400"/>
+                        <entry key="resize-height-amount" value="400"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+                <entry key="thumbnail">
+                    <map>
+                        <entry key="resize-width-amount" value="60"/>
+                        <entry key="resize-height-amount" value="60"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blStaticMapNamedOperations-client"/>
+        <property name="targetRef" value="blStaticMapNamedOperations"/>
+    </bean>    
+    
+     <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blMergedPersistenceXmlLocations-client">
+        <property name="sourceList">
+            <list>
+                <value>classpath*:/META-INF/persistence-cms.xml</value>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blMergedPersistenceXmlLocations-client"/>
+        <property name="targetRef" value="blMergedPersistenceXmlLocations"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.MapFactoryBean" id="blMergedDataSources-client">
+        <property name="sourceMap">
+            <map>
+                <entry key="jdbc/test" value-ref="blDS"/>
+                <entry key="jdbc/testCMS" value-ref="blDS"/>
+                <entry key="jdbc/testSecure" value-ref="blDS"/>
+            </map>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blMergedDataSources-client"/>
+        <property name="targetRef" value="blMergedDataSources"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blContentRuleProcessors-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blContentDefaultRuleProcessor"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blContentRuleProcessors-client"/>
+        <property name="targetRef" value="blContentRuleProcessors"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blFulfillmentPricingProviders-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blFixedPriceFulfillmentPricingProvider"/>
+                <ref bean="blBandedFulfillmentPricingProvider"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blFulfillmentPricingProviders-client"/>
+        <property name="targetRef" value="blFulfillmentPricingProviders"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blPageRuleProcessors-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blPageDefaultRuleProcessor"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blPageRuleProcessors-client"/>
+        <property name="targetRef" value="blPageRuleProcessors"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blMergedClassTransformers-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blAnnotationDirectCopyClassTransformer"/>
+                <ref bean="blEntityMarkerClassTransformer"/>
+                <ref bean="blConditionalFieldAnnotationClassTransformer"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blMergedClassTransformers-client"/>
+        <property name="targetRef" value="blMergedClassTransformers"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blFieldMetadataProviders-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blCustomerUsernameFieldMetadataProvider"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blFieldMetadataProviders-client"/>
+        <property name="targetRef" value="blFieldMetadataProviders"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blPersistenceProviders-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blHTMLFieldPersistenceProvider"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blPersistenceProviders-client"/>
+        <property name="targetRef" value="blPersistenceProviders"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blPricingWorkflowActivities-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blOfferActivity"/>
+                <ref bean="blConsolidateFulfillmentFeesActivity"/>
+                <ref bean="blFulfillmentItemPricingActivity"/>
+                <ref bean="blFulfillmentGroupMerchandiseTotalActivity"/>
+                <ref bean="blFulfillmentGroupPricingActivity"/>
+                <ref bean="blShippingOfferActivity"/>
+                <ref bean="blTaxActivity"/>
+                <ref bean="blTotalActivity"/>
+                <ref bean="blAdjustOrderPaymentsActivity"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blPricingWorkflowActivities-client"/>
+        <property name="targetRef" value="blPricingWorkflowActivities"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blAddItemWorkflowActivties-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blValidateAddRequestActivity"/>
+                <ref bean="blCheckAddAvailabilityActivity"/>
+                <ref bean="blAddOrderItemActivity"/>
+                <ref bean="blAddFulfillmentGroupItemActivity"/>
+                <ref bean="blAddWorkflowPriceOrderIfNecessaryActivity"/>
+                <ref bean="blAddWorkflowVerifyFulfillmentGroupItemsActivity"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blAddItemWorkflowActivties-client"/>
+        <property name="targetRef" value="blAddItemWorkflowActivties"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blUpdateItemWorkflowActivities-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blValidateUpdateRequestActivity"/>
+                <ref bean="blCheckUpdateAvailabilityActivity"/>
+                <ref bean="blUpdateOrderItemActivity"/>
+                <ref bean="blUdateOrderMultishipOptionActivity"/>
+                <ref bean="blUpdateFulfillmentGroupItemActivity"/>
+                <ref bean="blUpdateWorkflowPriceOrderIfNecessaryActivity"/>
+                <ref bean="blUpdateWorkflowVerifyFulfillmentGroupItemsActivity"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blUpdateItemWorkflowActivities-client"/>
+        <property name="targetRef" value="blUpdateItemWorkflowActivities"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blRemoveItemWorkflowActivities-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blValidateRemoveRequestActivity"/>
+                <ref bean="blRemoveOrderMultishipOptionActivity"/>
+                <ref bean="blRemoveFulfillmentGroupItemActivity"/>
+                <ref bean="blRemoveOrderItemActivity"/>
+                <ref bean="blRemoveWorkflowPriceOrderIfNecessaryActivity"/>
+                <ref bean="blRemoveWorkflowVerifyFulfillmentGroupItemsActivity"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blRemoveItemWorkflowActivities-client"/>
+        <property name="targetRef" value="blRemoveItemWorkflowActivities"/>
+    </bean>
+    <bean class="org.broadleafcommerce.core.workflow.SequenceProcessor" id="blRemoveItemWorkflow">
+        <property name="processContextFactory">
+            <bean class="org.broadleafcommerce.core.order.service.workflow.CartOperationProcessContextFactory"/>
+        </property>
+        
+        <property name="defaultErrorHandler" ref="blDefaultErrorHandler"/>
+    <property name="activities" ref="blRemoveItemWorkflowActivities"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blAdditionalSectionAuthorizations-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blPolymorphicEntityCheckSectionAuthorization"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blAdditionalSectionAuthorizations-client"/>
+        <property name="targetRef" value="blAdditionalSectionAuthorizations"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blTaxProviders-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blSimpleTaxProvider"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blTaxProviders-client"/>
+        <property name="targetRef" value="blTaxProviders"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blAddressVerificationProviders-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="addressTestBean"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blAddressVerificationProviders-client"/>
+        <property name="targetRef" value="blAddressVerificationProviders"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blRuleBuilderFieldServices-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blOrderItemFieldService"/>
+                <ref bean="blCustomerFieldService"/>
+                <ref bean="blCategoryFieldService"/>
+                <ref bean="blTimeFieldService"/>
+                <ref bean="blRequestFieldService"/>
+                <ref bean="blOrderFieldService"/>
+                <ref bean="blFulfillmentGroupFieldService"/>
+                <ref bean="blLocaleFieldService"/>
+                <ref bean="blSkuFieldService"/>
+                <ref bean="blProductFieldService"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blRuleBuilderFieldServices-client"/>
+        <property name="targetRef" value="blRuleBuilderFieldServices"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blUpdateProductOptionsForItemWorkflowActivities-client">
+        <property name="sourceList">
+            <list>
+                <ref bean="blValidateUpdateProductOptionsRequestActivity"/>
+                <ref bean="blUpdateProductOptionsOrderItemActivity"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blUpdateProductOptionsForItemWorkflowActivities-client"/>
+        <property name="targetRef" value="blUpdateProductOptionsForItemWorkflowActivities"/>
+    </bean>
+    
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blPersistenceUnitPostProcessors-client">
+        <property name="sourceList">
+            <list>
+                <bean class="org.broadleafcommerce.common.extensibility.jpa.JPAPropertiesPersistenceUnitPostProcessor"/>
+                <bean class="org.broadleafcommerce.common.extensibility.jpa.ConditionalORMConfigPersistenceUnitPostProcessor"/>
+            </list>
+        </property>
+    </bean>
+    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
+        <property name="sourceRef" value="blPersistenceUnitPostProcessors-client"/>
+        <property name="targetRef" value="blPersistenceUnitPostProcessors"/>
+    </bean>
+    
+    <bean class="org.broadleafcommerce.common.web.expression.AssetURLVariableExpression"/>
+    <bean class="org.broadleafcommerce.common.web.expression.NullBroadleafVariableExpression"/>
+    <bean class="org.broadleafcommerce.common.web.expression.BRCVariableExpression"/>
+    <bean class="org.broadleafcommerce.common.web.expression.PropertiesVariableExpression"/>
+    <bean class="org.broadleafcommerce.common.web.payment.expression.PaymentGatewayFieldVariableExpression"/>
+</beans>

@@ -17,7 +17,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -49,8 +48,18 @@ public class XMLMigrator {
     
     protected String qualifier = "";
     
+    protected String outputDirectory = "";
+    
     public XMLMigrator(boolean isDryRun, String qualifier) {
         this.isDryRun = isDryRun;
+        this.qualifier = qualifier;
+    }
+    
+    public XMLMigrator(boolean isDryRun, String qualifier, String outputDirectory) {
+        if (StringUtils.isEmpty(outputDirectory)) {
+            this.isDryRun = isDryRun;
+        }
+        this.outputDirectory = outputDirectory;
         this.qualifier = qualifier;
     }
 
@@ -78,10 +87,13 @@ public class XMLMigrator {
         if (changed) {
             if (isDryRun) {
                 LOG.info(DocumentHelper.formatDocumentToString(document));
+            } else if (!StringUtils.isEmpty(outputDirectory)) {
+                File outputDir = new File(outputDirectory);
+                outputDir.mkdirs();
+                File outputFile = new File(outputDir, file.getName());
+                DocumentHelper.writeDocumentToFile(outputFile, document);
             } else {
-                try (FileWriter writer = new FileWriter(file, false)) {
-                    writer.write(DocumentHelper.formatDocumentToString(document));
-                }
+                DocumentHelper.writeDocumentToFile(file, document);
             }
             LoggingHelper.printBeanChanges(file.getPath(), ongoingLog, affectedBeanMap);
             LOG.info("\n" + ongoingLog.toString());

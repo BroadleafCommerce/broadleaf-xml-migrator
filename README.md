@@ -8,7 +8,7 @@ This project can either be cloned locally or the executable jar can be downloade
 ### Using Downloaded JAR
 Locate the JAR in your local system and run
 ```
-java -jar broadleaf-xml-migrator-{version}.jar --filepath={filepath} --qualifier={qualifier} --dryrun={true|false}
+java -jar broadleaf-xml-migrator-{version}.jar --filepath={filepath} --qualifier={qualifier} --dryrun={true|false} --outputpath={dirpath}
 ```
 ### Using JAR created from cloned repo
 Create the JAR by navigating to the root directory of where the repo was cloned and run
@@ -19,7 +19,7 @@ The JAR will be built inside the `target` directory so navigate there and run th
 ### Running without creating a JAR
 Naviagte to the root directory of where the repo was cloned and run
 ```
-mvn spring-boot:run -Drun.arguments="--filepath={filepath},--qualifier={qualifier},--dryrun={true|false}"
+mvn spring-boot:run -Drun.arguments="--filepath={filepath},--qualifier={qualifier},--dryrun={true|false},--outputpath={dirpath}"
 ```
 ### Arguments
 - `--filepath={filepath}`
@@ -64,12 +64,29 @@ mvn spring-boot:run -Drun.arguments="--filepath={filepath},--qualifier={qualifie
     - Optional
     - Defaults to false
     - If set to true then the resulting migrated xml file prints to the console. If not set or not true then the file that was being migrated will be altered in place
+- `--outputpath={path}`
+    - Optional
+    - Defaults to nothing and is not used if it's not set
+    = If this parameter is set with a value then the resulting migrated xml file(s) will be saved to that location. The original xml files will be unchanged and will not be printed to the console. If this value is set and `--dryrun` is also set, the `--dryrun` argument will be ignored
         
 ## Example Usage
-`mvn package;java -jar target/broadleaf-xml-migrator-0.0.1-SNAPSHOT.jar --filepath=/Users/user/blc/DemoSite --dryrun=true --qualifier=ds`
+```
+mvn package;java -jar target/broadleaf-xml-migrator-0.0.1-SNAPSHOT.jar --filepath=/Users/user/blc/DemoSite --dryrun=true --qualifier=ds
+```
+or
+```
+mvn package;java -jar target/broadleaf-xml-migrator-0.0.1-SNAPSHOT.jar --filepath=/Users/user/blc/DemoSite --outputpath=/users/user/blc/MigratedXml
+```
 
 ## Running without packaging into a jar
-`mvn spring-boot:run -Drun.arguments="--filepath=/Users/user/blc/DemoSite,--qualifier=ds,--dryrun=true"`
+```
+mvn spring-boot:run -Drun.arguments="--filepath=/Users/user/blc/DemoSite,--qualifier=ds,--dryrun=true"
+```
+of
+```
+mvn spring-boot:run -Drun.arguments="--filepath=/Users/user/blc/DemoSite,--qualifier=ds,--outputpath=/users/user/blc/MigratedXml"
+```
+
 
 ## Example Results
 The result of running

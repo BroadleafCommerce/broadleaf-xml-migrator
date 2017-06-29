@@ -8,6 +8,7 @@ import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 
@@ -124,5 +125,11 @@ public class DocumentHelper {
      
         transformer.transform(new DOMSource(document), streamResult);
         return stringWriter.toString();
+    }
+    
+    public static void writeDocumentToFile(File file, Document document) throws IOException, TransformerFactoryConfigurationError, TransformerException {
+        try (FileWriter writer = new FileWriter(file, false)) {
+            writer.write(DocumentHelper.formatDocumentToString(document));
+        }
     }
 }

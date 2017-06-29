@@ -12,6 +12,7 @@ import org.broadleafcommerce.broadleafxmlmigrator.helper.LoggingHelper;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -73,6 +74,7 @@ public class XMLMigrator {
         changed = handleWorkflowBeans(document) || changed;
         changed = handleVariableExpressions(document) || changed;
         changed = handleRemoveUnneededBeans(document) || changed;
+        changed = updateXsdSchema(document) || changed;
         if (changed) {
             if (isDryRun) {
                 LOG.info(DocumentHelper.formatDocumentToString(document));
@@ -246,6 +248,26 @@ public class XMLMigrator {
             }
         }
         return changed;
+    }
+    
+    protected boolean updateXsdSchema(Document document) throws XPathExpressionException {
+        XPath evaluator = XPathFactory.newInstance().newXPath();
+        Node node = (Node) evaluator.evaluate("/beans", document, XPathConstants.NODE);
+        NamedNodeMap attributeMap = node.getAttributes();
+        if (attributeMap == null) {
+            return false;
+        }
+        Node schemaNode = attributeMap.getNamedItem("xsi:schemaLocation");
+        if (schemaNode == null) {
+            return false;
+        }
+        String schemaValue = schemaNode.getNodeValue();
+        String resultingValue = schemaValue.replaceAll("spring-([a-zA-Z]+)-[0-9].[0-9].xsd", "spring-$1.xsd");
+        if (!resultingValue.equals(schemaValue)) {
+            schemaNode.setNodeValue(resultingValue);
+            return true;
+        }
+        return false;
     }
     
     /**

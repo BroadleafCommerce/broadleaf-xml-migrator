@@ -55,7 +55,7 @@ public class LateAndEarlyStageExecutionArguments {
     
     public static final ExecutionArguments MESSAGE_SOURCE = 
             new ExecutionArguments(new String[]{"/beans/bean[@id='messageSource']/property[@name='basenames']/list/value"}, 
-                                   "/beans/bean[@id='messageSource']", "messageSourceBaseNames", CollectionType.LIST, MergeType.LATE);
+                                   "/beans/bean[@id='messageSource']", "blMessageSourceBaseNames", CollectionType.LIST, MergeType.LATE);
     
     public static final ExecutionArguments MERGED_CLASS_TRANSFORMERS =
             new ExecutionArguments(new String[]{"/beans/bean[@id='blMergedClassTransformers']/property[@name='sourceList']/list/ref", "/beans/bean[@id='blMergedClassTransformers']/property[@name='sourceList']/list/bean"},

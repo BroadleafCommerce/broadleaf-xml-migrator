@@ -4,7 +4,7 @@
     
 
     <!-- Set up Broadleaf messaging -->
-    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="messageSourceBaseNames-client">
+    <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blMessageSourceBaseNames-client">
         <property name="sourceList">
             <list>
                 <value>classpath:messages</value>
@@ -12,8 +12,8 @@
         </property>
     </bean>
     <bean class="org.broadleafcommerce.common.extensibility.context.merge.LateStageMergeBeanPostProcessor">
-        <property name="sourceRef" value="messageSourceBaseNames-client"/>
-        <property name="targetRef" value="messageSourceBaseNames"/>
+        <property name="sourceRef" value="blMessageSourceBaseNames-client"/>
+        <property name="targetRef" value="blMessageSourceBaseNames"/>
     </bean>
     
     <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blCustomPersistenceHandlers-client">

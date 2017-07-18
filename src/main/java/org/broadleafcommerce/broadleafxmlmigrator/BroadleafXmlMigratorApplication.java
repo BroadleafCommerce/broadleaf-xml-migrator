@@ -41,7 +41,7 @@ public class BroadleafXmlMigratorApplication implements ApplicationRunner {
                 recursivelyDoMigrations(file, migrator);
             }
         } else {
-            LOG.info("No file path was specified. Please try again with a --" + FILE_PATH_KEY + " argument");
+            LOG.error("No file path was specified. Please try again with a --" + FILE_PATH_KEY + " argument");
         }
     }
     

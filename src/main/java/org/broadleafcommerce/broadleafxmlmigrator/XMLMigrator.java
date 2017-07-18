@@ -75,31 +75,36 @@ public class XMLMigrator {
         if (!isAppContext(file)) {
             return;
         }
-        Document document = DocumentHelper.buildDocument(file);
-        boolean changed = false;
-        for (ExecutionArguments executionArgs : new LateAndEarlyStageExecutionArguments().getLateAndEarlyMergeArguments()) {
-            changed = insertAndReplaceWithMerge(document, executionArgs) || changed;
-        }
-        changed = handleWorkflowBeans(document) || changed;
-        changed = handleVariableExpressions(document) || changed;
-        changed = handleRemoveUnneededBeans(document) || changed;
-        changed = updateXsdSchema(document) || changed;
-        if (changed) {
-            if (isDryRun) {
-                LOG.info(DocumentHelper.formatDocumentToString(document));
-            } else if (!StringUtils.isEmpty(outputDirectory)) {
-                File outputDir = new File(outputDirectory);
-                outputDir.mkdirs();
-                File outputFile = new File(outputDir, file.getName());
-                DocumentHelper.writeDocumentToFile(outputFile, document);
-            } else {
-                DocumentHelper.writeDocumentToFile(file, document);
+        try {
+            Document document = DocumentHelper.buildDocument(file);
+            boolean changed = false;
+            for (ExecutionArguments executionArgs : new LateAndEarlyStageExecutionArguments().getLateAndEarlyMergeArguments()) {
+                changed = insertAndReplaceWithMerge(document, executionArgs) || changed;
             }
-            LoggingHelper.printBeanChanges(file.getPath(), ongoingLog, affectedBeanMap);
-            LOG.info("\n" + ongoingLog.toString());
+            changed = handleWorkflowBeans(document) || changed;
+            changed = handleVariableExpressions(document) || changed;
+            changed = handleRemoveUnneededBeans(document) || changed;
+            changed = updateXsdSchema(document) || changed;
+            if (changed) {
+                if (isDryRun) {
+                    LOG.info(DocumentHelper.formatDocumentToString(document));
+                } else if (!StringUtils.isEmpty(outputDirectory)) {
+                    File outputDir = new File(outputDirectory);
+                    outputDir.mkdirs();
+                    File outputFile = new File(outputDir, file.getName());
+                    DocumentHelper.writeDocumentToFile(outputFile, document);
+                } else {
+                    DocumentHelper.writeDocumentToFile(file, document);
+                }
+                LoggingHelper.printBeanChanges(file.getPath(), ongoingLog, affectedBeanMap);
+                LOG.info("\n" + ongoingLog.toString());
+            }
+            ongoingLog = new StringBuilder();
+            affectedBeanMap = new LinkedHashMap<>();
+        } catch (Exception e) {
+            LOG.error("Error occurred in file " + file.getPath());
+            throw e;
         }
-        ongoingLog = new StringBuilder();
-        affectedBeanMap = new LinkedHashMap<>();
     }
     
     /**
@@ -120,7 +125,7 @@ public class XMLMigrator {
             return false;
         }
         if (addCollectionAndMergeBeans(oldBeanDef, args, document)) {
-            document.getFirstChild().removeChild(oldBeanDef);
+            getRootBeansNode(document).removeChild(oldBeanDef);
             return true;
         }
         return false;
@@ -136,7 +141,12 @@ public class XMLMigrator {
     protected boolean handleWorkflowBeans(Document document) throws XPathExpressionException {
         boolean changed = false;
         for (ExecutionArguments args : new WorkflowExecutionArguments().getWorkflowArguments()) {
-            changed = handlWorkflowBeans(document, args) || changed;
+            try {
+                changed = handlWorkflowBeans(document, args) || changed;
+            } catch (Exception e) {
+                LOG.error("Error occurred when handling workflow beans. The Xpath that broke was " + args.getBeanXpath());
+                throw e;
+            }
         }
         return changed;
     }
@@ -204,11 +214,17 @@ public class XMLMigrator {
             return false;
         }
         Element mergeBean = DocumentHelper.createMergeBean(document, args, newBeanId);
-        document.getFirstChild().insertBefore(newCollectionBean, oldBeanDef);
-        document.getFirstChild().insertBefore(mergeBean, oldBeanDef);
-        updateAdditionalBeanIdQualifierMap(args);
-        logBeanChange(args.getBeanXpath(), newBeanId);
-        return true;
+        Node firstChild = getRootBeansNode(document);
+        try {
+            firstChild.insertBefore(newCollectionBean, oldBeanDef);
+            firstChild.insertBefore(mergeBean, oldBeanDef);
+            updateAdditionalBeanIdQualifierMap(args);
+            logBeanChange(args.getBeanXpath(), newBeanId);
+            return true;
+        } catch (Exception e) {
+            LOG.error("Error occurred creating collection and merge bean. Original xpath was " + args.getBeanXpath());
+            throw e;
+        }
     }
     
     /**
@@ -224,21 +240,27 @@ public class XMLMigrator {
         ExecutionArguments args = new ExecutionArguments
                 (new String[]{"/beans/bean[@id='blVariableExpressions']/property[@name='sourceList']/list/bean"},
                  "/beans/bean[@id='blVariableExpressions']", "blVariableExpressions", null, null);
-        XPath evaluator = XPathFactory.newInstance().newXPath();
-        Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
-        if (oldBeanDef == null) {
-            return false;
-        }
-        ongoingLog.append("Variable Expressions now just have to be defined and not merged into blVariableExpression.\nThe beans that were created in blVariableExpressions were moved out and then the blVariableExpressions definition was removed\n\n");
-        for (String xpath : args.getCollectionXpaths()) {
-            NodeList vals = (NodeList) evaluator.evaluate(xpath, document, XPathConstants.NODESET);
-            for (int i = 0; i < vals.getLength(); i++) {
-                document.getFirstChild().insertBefore(vals.item(i), oldBeanDef);
+        try {
+            XPath evaluator = XPathFactory.newInstance().newXPath();
+            Node oldBeanDef = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
+            if (oldBeanDef == null) {
+                return false;
             }
+            ongoingLog.append("Variable Expressions now just have to be defined and not merged into blVariableExpression.\nThe beans that were created in blVariableExpressions were moved out and then the blVariableExpressions definition was removed\n\n");
+            Node firstChild = getRootBeansNode(document);
+            for (String xpath : args.getCollectionXpaths()) {
+                NodeList vals = (NodeList) evaluator.evaluate(xpath, document, XPathConstants.NODESET);
+                for (int i = 0; i < vals.getLength(); i++) {
+                    firstChild.insertBefore(vals.item(i), oldBeanDef);
+                }
+            }
+            firstChild.removeChild(oldBeanDef);
+            logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
+            return true;
+        } catch (Exception e) {
+            LOG.error("Error occurred when migrating variable expressions");
+            throw e;
         }
-        document.getFirstChild().removeChild(oldBeanDef);
-        logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
-        return true;
     }
     
     /**
@@ -251,35 +273,45 @@ public class XMLMigrator {
         boolean changed = false;
         XPath evaluator = XPathFactory.newInstance().newXPath();
         for (LoggableExecutionArguments args : new RemovedBeanExecutionArguments().getLoggableExecutionArguments()) {
-            Node node  = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
-            if (node != null) {
-                document.getFirstChild().removeChild(node);
-                ongoingLog.append(args.getLogMessage() + "\n\n");
-                logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
-                changed = true;
+            try {
+                Node node  = (Node) evaluator.evaluate(args.getBeanXpath(), document, XPathConstants.NODE);
+                if (node != null) {
+                    getRootBeansNode(document).removeChild(node);
+                    ongoingLog.append(args.getLogMessage() + "\n\n");
+                    logBeanChange(args.getBeanXpath(), "The original bean was just removed. See logs above");
+                    changed = true;
+                }
+            } catch (Exception e) {
+                LOG.error("Error occurred when removing unneeded beans. Xpath that broke was " + args.getBeanXpath());
+                throw e;
             }
         }
         return changed;
     }
     
     protected boolean updateXsdSchema(Document document) throws XPathExpressionException {
-        XPath evaluator = XPathFactory.newInstance().newXPath();
-        Node node = (Node) evaluator.evaluate("/beans", document, XPathConstants.NODE);
-        NamedNodeMap attributeMap = node.getAttributes();
-        if (attributeMap == null) {
+        try {
+            XPath evaluator = XPathFactory.newInstance().newXPath();
+            Node node = (Node) evaluator.evaluate("/beans", document, XPathConstants.NODE);
+            NamedNodeMap attributeMap = node.getAttributes();
+            if (attributeMap == null) {
+                return false;
+            }
+            Node schemaNode = attributeMap.getNamedItem("xsi:schemaLocation");
+            if (schemaNode == null) {
+                return false;
+            }
+            String schemaValue = schemaNode.getNodeValue();
+            String resultingValue = schemaValue.replaceAll("spring-([a-zA-Z]+)-[0-9].[0-9].xsd", "spring-$1.xsd");
+            if (!resultingValue.equals(schemaValue)) {
+                schemaNode.setNodeValue(resultingValue);
+                return true;
+            }
             return false;
+        } catch (Exception e) {
+            LOG.error("Error occurred when updating the XSD schema");
+            throw e;
         }
-        Node schemaNode = attributeMap.getNamedItem("xsi:schemaLocation");
-        if (schemaNode == null) {
-            return false;
-        }
-        String schemaValue = schemaNode.getNodeValue();
-        String resultingValue = schemaValue.replaceAll("spring-([a-zA-Z]+)-[0-9].[0-9].xsd", "spring-$1.xsd");
-        if (!resultingValue.equals(schemaValue)) {
-            schemaNode.setNodeValue(resultingValue);
-            return true;
-        }
-        return false;
     }
     
     /**
@@ -337,6 +369,21 @@ public class XMLMigrator {
      */
     protected boolean isAppContext(File file) {
         String fileName = file.getName();
-        return StringUtils.startsWithIgnoreCase(fileName, "applicationContext") && StringUtils.endsWithIgnoreCase(fileName, ".xml");
+        return fileName.contains("applicationContext") && StringUtils.endsWithIgnoreCase(fileName, ".xml");
+    }
+    
+    /**
+     * Grabs the "beans" element in the document. 
+     * 
+     * This should be used when modifying the DOM since there might be comments or something at
+     * the top of the xml file therefore document.getFirstChild() may not return the beans element
+     * 
+     * @param document
+     * @return The "beans" node in the xml document
+     * @throws XPathExpressionException
+     */
+    protected Node getRootBeansNode(Document document) throws XPathExpressionException {
+        XPath evaluator = XPathFactory.newInstance().newXPath();
+        return (Node) evaluator.evaluate("/beans", document, XPathConstants.NODE);
     }
 }

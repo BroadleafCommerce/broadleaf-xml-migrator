@@ -103,7 +103,7 @@
         <property name="targetRef" value="blMergedPersistenceXmlLocations"/>
     </bean>
     
-    <bean class="org.springframework.beans.factory.config.MapFactoryBean" id="blMergedDataSources-client">
+    <bean class="org.springframework.beans.factory.config.MapFactoryBean" id="blMergedDataSources">
         <property name="sourceMap">
             <map>
                 <entry key="jdbc/test" value-ref="blDS"/>
@@ -111,10 +111,6 @@
                 <entry key="jdbc/testSecure" value-ref="blDS"/>
             </map>
         </property>
-    </bean>
-    <bean class="org.broadleafcommerce.common.extensibility.context.merge.EarlyStageMergeBeanPostProcessor">
-        <property name="sourceRef" value="blMergedDataSources-client"/>
-        <property name="targetRef" value="blMergedDataSources"/>
     </bean>
     
     <bean class="org.springframework.beans.factory.config.ListFactoryBean" id="blContentRuleProcessors-client">

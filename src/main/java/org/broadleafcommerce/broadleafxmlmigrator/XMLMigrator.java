@@ -85,6 +85,7 @@ public class XMLMigrator {
             changed = handleVariableExpressions(document) || changed;
             changed = handleRemoveUnneededBeans(document) || changed;
             changed = updateXsdSchema(document) || changed;
+            handleMergedDataSources(document);
             if (changed) {
                 if (isDryRun) {
                     LOG.info(DocumentHelper.formatDocumentToString(document));
@@ -291,8 +292,7 @@ public class XMLMigrator {
     
     protected boolean updateXsdSchema(Document document) throws XPathExpressionException {
         try {
-            XPath evaluator = XPathFactory.newInstance().newXPath();
-            Node node = (Node) evaluator.evaluate("/beans", document, XPathConstants.NODE);
+            Node node = getRootBeansNode(document);
             NamedNodeMap attributeMap = node.getAttributes();
             if (attributeMap == null) {
                 return false;
@@ -311,6 +311,19 @@ public class XMLMigrator {
         } catch (Exception e) {
             LOG.error("Error occurred when updating the XSD schema");
             throw e;
+        }
+    }
+    
+    protected void handleMergedDataSources(Document document) {
+        String mergedDataSources = "/beans/bean[@id='blMergedDataSources']";
+        try {
+            XPath evaluator = XPathFactory.newInstance().newXPath();
+            Node node = (Node) evaluator.evaluate(mergedDataSources, document, XPathConstants.NODE);
+            if (node != null) {
+                ongoingLog.append("A bean with xpath " + mergedDataSources + " has been found. This bean should either be declared once in core or in admin and site.\nMultiple definitons will override the previous declaration if an EarlyStageMerge has not been used to manually to merge the definitions\n\n");
+            }
+        } catch (Exception e) {
+            // Do nothing. We don't break on a validation step
         }
     }
     

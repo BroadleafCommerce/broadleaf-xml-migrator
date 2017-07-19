@@ -21,10 +21,6 @@ public class LateAndEarlyStageExecutionArguments {
             new ExecutionArguments(new String[]{"/beans/bean[@id='blMergedPersistenceXmlLocations']/property[@name='sourceList']/list/value"},
                                    "/beans/bean[@id='blMergedPersistenceXmlLocations']", "blMergedPersistenceXmlLocations", CollectionType.LIST, MergeType.EARLY);
     
-    public static final ExecutionArguments MERGED_DATA_SOURCES =
-            new ExecutionArguments(new String[]{"/beans/bean[@id='blMergedDataSources']/property[@name='sourceMap']/map/entry"},
-                                   "/beans/bean[@id='blMergedDataSources']", "blMergedDataSources", CollectionType.MAP, MergeType.EARLY);
-    
     public static final ExecutionArguments MERGED_CACHE_CONFIG_LOCATIONS = 
             new ExecutionArguments(new String[]{"/beans/bean[@id='blMergedCacheConfigLocations']/property[@name='sourceList']/list/value"},
                                    "/beans/bean[@id='blMergedCacheConfigLocations']", "blMergedCacheConfigLocations", CollectionType.LIST, MergeType.EARLY);
@@ -97,7 +93,6 @@ public class LateAndEarlyStageExecutionArguments {
     
     public LateAndEarlyStageExecutionArguments() {
         lateAndEarlyMergeArguments.add(MERGED_PERSISTENCE_XML_LOCATIONS);
-        lateAndEarlyMergeArguments.add(MERGED_DATA_SOURCES);
         lateAndEarlyMergeArguments.add(MERGED_CACHE_CONFIG_LOCATIONS);
         lateAndEarlyMergeArguments.add(CUSTOM_PERSISTENCE_HANDLERS);
         lateAndEarlyMergeArguments.add(CONTENT_RULE_PROCESSORS);
